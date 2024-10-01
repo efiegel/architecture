@@ -100,5 +100,8 @@ checkpoint = {
     "model": model.state_dict(),
     "optimizer": optimizer.state_dict(),
     "iter_num": iter,
+    "vocab_size": vocab_size,
+    "stoi": stoi,
+    "itos": itos,
 }
 torch.save(checkpoint, os.path.join(".checkpoints", "ckpt.pt"))
