@@ -4,6 +4,7 @@ from itertools import islice
 import torch
 
 from models.transformer import TransformerModel
+from utils import create_encode, int_to_str, str_to_int
 
 # hyperparameters
 batch_size = 12  # how many independent sequences will we process in parallel?
@@ -22,18 +23,11 @@ with open("data/minishakespeare.txt", "r", encoding="utf-8") as f:
     lines = list(islice(f, 10000))
     text = "".join(lines)
 
-# here are all the unique characters that occur in this text
+# get unique characters text and create encoding/decoding mappings
 chars = sorted(list(set(text)))
 vocab_size = len(chars)
-# create a mapping from characters to integers
-stoi = {ch: i for i, ch in enumerate(chars)}
-itos = {i: ch for i, ch in enumerate(chars)}
-encode = lambda s: [
-    stoi[c] for c in s
-]  # encoder: take a string, output a list of integers
-decode = lambda l: "".join(
-    [itos[i] for i in l]
-)  # decoder: take a list of integers, output a string
+stoi, itos = str_to_int(chars), int_to_str(chars)
+encode = create_encode(stoi)
 
 # Train and test splits
 data = torch.tensor(encode(text), dtype=torch.long)
@@ -87,6 +81,9 @@ for iter in range(max_iters):
             "model": model.state_dict(),
             "optimizer": optimizer.state_dict(),
             "iter_num": iter,
+            "vocab_size": vocab_size,
+            "stoi": stoi,
+            "itos": itos,
         }
         torch.save(checkpoint, os.path.join(".checkpoints", "ckpt.pt"))
 
