@@ -4,6 +4,9 @@
 # Environment variables
 .env
 
+# Model checkpoints
+.checkpoints
+
 # Coverage reports
 .coverage
 .coverage.*

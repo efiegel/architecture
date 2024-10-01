@@ -1,3 +1,4 @@
+import os
 from itertools import islice
 
 import torch
@@ -82,6 +83,12 @@ for iter in range(max_iters):
         print(
             f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}"
         )
+        checkpoint = {
+            "model": model.state_dict(),
+            "optimizer": optimizer.state_dict(),
+            "iter_num": iter,
+        }
+        torch.save(checkpoint, os.path.join(".checkpoints", "ckpt.pt"))
 
     # sample a batch of data
     xb, yb = get_batch("train")
@@ -92,7 +99,9 @@ for iter in range(max_iters):
     loss.backward()
     optimizer.step()
 
-# generate from the model
-context = torch.zeros((1, 1), dtype=torch.long, device=device)
-print(decode(m.generate(context, max_new_tokens=500)[0].tolist()))
-# open('more.txt', 'w').write(decode(m.generate(context, max_new_tokens=10000)[0].tolist()))
+checkpoint = {
+    "model": model.state_dict(),
+    "optimizer": optimizer.state_dict(),
+    "iter_num": iter,
+}
+torch.save(checkpoint, os.path.join(".checkpoints", "ckpt.pt"))
