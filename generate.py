@@ -7,7 +7,7 @@ from utils import create_decode
 
 device = "cpu"
 ckpt_path = os.path.join(".checkpoints", "ckpt.pt")
-checkpoint = torch.load(ckpt_path, map_location=device)
+checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
 
 stoi, itos = checkpoint["stoi"], checkpoint["itos"]
 decode = create_decode(itos)
