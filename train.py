@@ -109,13 +109,3 @@ for iter in range(max_iters):
     optimizer.zero_grad(set_to_none=True)
     loss.backward()
     optimizer.step()
-
-checkpoint = {
-    "model": model.state_dict(),
-    "hyperparameters": hyperparameters,
-    "optimizer": optimizer.state_dict(),
-    "iter_num": iter,
-    "stoi": stoi,
-    "itos": itos,
-}
-torch.save(checkpoint, os.path.join(".checkpoints", "ckpt.pt"))
