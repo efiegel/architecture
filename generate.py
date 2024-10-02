@@ -12,7 +12,7 @@ checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
 stoi, itos = checkpoint["stoi"], checkpoint["itos"]
 decode = create_decode(itos)
 
-model = TransformerModel(checkpoint["vocab_size"])
+model = TransformerModel(**checkpoint["hyperparameters"])
 model.load_state_dict(checkpoint["model"])
 m = model.to(device)
 

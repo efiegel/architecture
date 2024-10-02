@@ -9,7 +9,11 @@ from utils import create_encode, int_to_str, str_to_int
 # hyperparameters
 batch_size = 12  # how many independent sequences will we process in parallel?
 block_size = 64  # what is the maximum context length for predictions?
-max_iters = 2000
+n_embd = 128
+n_head = 4
+n_layer = 4
+dropout = 0.0
+max_iters = 1000
 eval_interval = 125
 learning_rate = 3e-4
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -62,7 +66,17 @@ def estimate_loss():
     return out
 
 
-model = TransformerModel(vocab_size)
+hyperparameters = {
+    "n_embd": n_embd,
+    "n_head": n_head,
+    "n_layer": n_layer,
+    "block_size": block_size,
+    "dropout": dropout,
+    "vocab_size": vocab_size,
+    "device": device,
+}
+
+model = TransformerModel(**hyperparameters)
 m = model.to(device)
 # print the number of parameters in the model
 print(sum(p.numel() for p in m.parameters()) / 1e6, "M parameters")
@@ -79,9 +93,9 @@ for iter in range(max_iters):
         )
         checkpoint = {
             "model": model.state_dict(),
+            "hyperparameters": hyperparameters,
             "optimizer": optimizer.state_dict(),
             "iter_num": iter,
-            "vocab_size": vocab_size,
             "stoi": stoi,
             "itos": itos,
         }
@@ -98,9 +112,9 @@ for iter in range(max_iters):
 
 checkpoint = {
     "model": model.state_dict(),
+    "hyperparameters": hyperparameters,
     "optimizer": optimizer.state_dict(),
     "iter_num": iter,
-    "vocab_size": vocab_size,
     "stoi": stoi,
     "itos": itos,
 }

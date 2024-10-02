@@ -2,21 +2,11 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
-# hyperparameters
-batch_size = 12  # how many independent sequences will we process in parallel?
-block_size = 64  # what is the maximum context length for predictions?
-device = "cuda" if torch.cuda.is_available() else "cpu"
-n_embd = 128
-n_head = 4
-n_layer = 4
-dropout = 0.0
-# ------------
-
 
 class Head(nn.Module):
     """one head of self-attention"""
 
-    def __init__(self, head_size):
+    def __init__(self, n_embd, head_size, block_size, dropout):
         super().__init__()
         self.key = nn.Linear(n_embd, head_size, bias=False)
         self.query = nn.Linear(n_embd, head_size, bias=False)
@@ -47,9 +37,11 @@ class Head(nn.Module):
 class MultiHeadAttention(nn.Module):
     """multiple heads of self-attention in parallel"""
 
-    def __init__(self, num_heads, head_size):
+    def __init__(self, n_embd, num_heads, head_size, block_size, dropout):
         super().__init__()
-        self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
+        self.heads = nn.ModuleList(
+            [Head(n_embd, head_size, block_size, dropout) for _ in range(num_heads)]
+        )
         self.proj = nn.Linear(head_size * num_heads, n_embd)
         self.dropout = nn.Dropout(dropout)
 
@@ -62,7 +54,7 @@ class MultiHeadAttention(nn.Module):
 class FeedFoward(nn.Module):
     """a simple linear layer followed by a non-linearity"""
 
-    def __init__(self, n_embd):
+    def __init__(self, n_embd, dropout):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(n_embd, 4 * n_embd),
@@ -78,12 +70,12 @@ class FeedFoward(nn.Module):
 class Block(nn.Module):
     """Transformer block: communication followed by computation"""
 
-    def __init__(self, n_embd, n_head):
+    def __init__(self, n_embd, n_head, block_size, dropout):
         # n_embd: embedding dimension, n_head: the number of heads we'd like
         super().__init__()
         head_size = n_embd // n_head
-        self.sa = MultiHeadAttention(n_head, head_size)
-        self.ffwd = FeedFoward(n_embd)
+        self.sa = MultiHeadAttention(n_embd, n_head, head_size, block_size, dropout)
+        self.ffwd = FeedFoward(n_embd, dropout)
         self.ln1 = nn.LayerNorm(n_embd)
         self.ln2 = nn.LayerNorm(n_embd)
 
@@ -94,16 +86,20 @@ class Block(nn.Module):
 
 
 class TransformerModel(nn.Module):
-    def __init__(self, vocab_size):
+    def __init__(
+        self, n_embd, n_head, n_layer, block_size, dropout, vocab_size, device
+    ):
         super().__init__()
         # each token directly reads off the logits for the next token from a lookup table
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
         self.position_embedding_table = nn.Embedding(block_size, n_embd)
         self.blocks = nn.Sequential(
-            *[Block(n_embd, n_head=n_head) for _ in range(n_layer)]
+            *[Block(n_embd, n_head, block_size, dropout) for _ in range(n_layer)]
         )
         self.ln_f = nn.LayerNorm(n_embd)  # final layer norm
         self.lm_head = nn.Linear(n_embd, vocab_size)
+        self.block_size = block_size
+        self.device = device
 
         # better init, not covered in the original GPT video, but important, will cover in followup video
         self.apply(self._init_weights)
@@ -121,7 +117,9 @@ class TransformerModel(nn.Module):
 
         # idx and targets are both (B,T) tensor of integers
         tok_emb = self.token_embedding_table(idx)  # (B,T,C)
-        pos_emb = self.position_embedding_table(torch.arange(T, device=device))  # (T,C)
+        pos_emb = self.position_embedding_table(
+            torch.arange(T, device=self.device)
+        )  # (T,C)
         x = tok_emb + pos_emb  # (B,T,C)
         x = self.blocks(x)  # (B,T,C)
         x = self.ln_f(x)  # (B,T,C)
@@ -141,7 +139,7 @@ class TransformerModel(nn.Module):
         # idx is (B, T) array of indices in the current context
         for _ in range(max_new_tokens):
             # crop idx to the last block_size tokens
-            idx_cond = idx[:, -block_size:]
+            idx_cond = idx[:, -self.block_size :]
             # get the predictions
             logits, loss = self(idx_cond)
             # focus only on the last time step
