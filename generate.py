@@ -3,9 +3,9 @@ import os
 import torch
 
 from models.transformer import TransformerModel
-from utils import create_decode
+from utils import create_decode, get_device
 
-device = "cpu"
+device = get_device()
 ckpt_path = os.path.join(".checkpoints", "ckpt.pt")
 checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
 

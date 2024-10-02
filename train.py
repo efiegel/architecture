@@ -4,7 +4,7 @@ from itertools import islice
 import torch
 
 from models.transformer import TransformerModel
-from utils import create_encode, int_to_str_mapping, str_to_int_mapping
+from utils import create_encode, get_device, int_to_str_mapping, str_to_int_mapping
 
 # hyperparameters
 batch_size = 12  # how many independent sequences will we process in parallel?
@@ -16,7 +16,7 @@ dropout = 0.0
 max_iters = 1000
 eval_interval = 125
 learning_rate = 3e-4
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = get_device()
 eval_iters = 20
 # ------------
 
