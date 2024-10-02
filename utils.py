@@ -1,20 +1,20 @@
-def str_to_int(characters):
+def str_to_int_mapping(characters: str) -> dict[str, int]:
     return {c: i for i, c in enumerate(characters)}
 
 
-def int_to_str(characters):
+def int_to_str_mapping(characters: str) -> dict[int, str]:
     return {i: c for i, c in enumerate(characters)}
 
 
-def create_encode(stoi):
-    def encode(s):
-        return [stoi[c] for c in s]
+def create_encode(stoi) -> callable:
+    def encode(string: str) -> list[int]:
+        return [stoi[c] for c in string]
 
     return encode
 
 
-def create_decode(itos):
-    def decode(l):
-        return "".join([itos[i] for i in l])
+def create_decode(itos) -> callable:
+    def decode(integers: list[int]) -> str:
+        return "".join([itos[i] for i in integers])
 
     return decode

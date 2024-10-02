@@ -4,7 +4,7 @@ from itertools import islice
 import torch
 
 from models.transformer import TransformerModel
-from utils import create_encode, int_to_str, str_to_int
+from utils import create_encode, int_to_str_mapping, str_to_int_mapping
 
 # hyperparameters
 batch_size = 12  # how many independent sequences will we process in parallel?
@@ -30,7 +30,7 @@ with open("data/minishakespeare.txt", "r", encoding="utf-8") as f:
 # get unique characters text and create encoding/decoding mappings
 chars = sorted(list(set(text)))
 vocab_size = len(chars)
-stoi, itos = str_to_int(chars), int_to_str(chars)
+stoi, itos = str_to_int_mapping(chars), int_to_str_mapping(chars)
 encode = create_encode(stoi)
 
 # Train and test splits
